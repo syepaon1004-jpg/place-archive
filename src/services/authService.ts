@@ -29,7 +29,7 @@ export async function authenticate(password: string): Promise<{ userId: string, 
   
   // 먼저 기존 사용자인지 확인
   const { data: existing } = await supabase
-    .from('users')
+    .from('app_users')
     .select('id')
     .eq('password_hash', hashedPassword)
     .maybeSingle();
@@ -41,7 +41,7 @@ export async function authenticate(password: string): Promise<{ userId: string, 
 
   // 신규 사용자: 회원가입
   const { data, error } = await supabase
-    .from('users')
+    .from('app_users')
     .insert([{ password_hash: hashedPassword }])
     .select()
     .single();
