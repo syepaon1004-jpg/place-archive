@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import type { ExtractedPlace, Place, UserPlace } from '../types/database.types';
+import type { ExtractedPlace } from '../types/database.types';
 
 /**
  * 장소 저장
@@ -126,8 +126,8 @@ export async function getUserPlaces(userId: string): Promise<any[]> {
         
         if (locData) {
           // location 데이터를 병합
-          data.forEach(item => {
-            const loc = locData.find(l => l.id === item.id);
+          data.forEach((item: any) => {
+            const loc = locData.find((l: any) => l.id === item.id);
             if (loc) {
               item.location = loc.location;
             }

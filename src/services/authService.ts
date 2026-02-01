@@ -28,7 +28,7 @@ export async function authenticate(password: string): Promise<{ userId: string, 
   const hashedPassword = await hashPassword(password);
   
   // 먼저 기존 사용자인지 확인
-  const { data: existing, error: checkError } = await supabase
+  const { data: existing } = await supabase
     .from('users')
     .select('id')
     .eq('password_hash', hashedPassword)
