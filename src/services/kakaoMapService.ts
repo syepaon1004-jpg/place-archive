@@ -88,6 +88,7 @@ export function loadKakaoMapScript(): Promise<void> {
 
 /**
  * 장소 검색 및 좌표 가져오기
+ * 주소 우선순위: 도로명주소 > 지번주소
  */
 export async function searchPlace(placeName: string): Promise<{
   name: string;
@@ -105,9 +106,18 @@ export async function searchPlace(placeName: string): Promise<{
         if (status === window.kakao.maps.services.Status.OK && data.length > 0) {
           // 첫 번째 검색 결과 사용 (가장 관련성 높은 결과)
           const place = data[0];
+
+          // 주소 우선순위: 도로명주소(road_address_name) > 지번주소(address_name)
+          // 도로명주소가 더 정확하고 찾기 쉬움
+          const address = place.road_address_name || place.address_name || '';
+
+          if (!address) {
+            console.warn('주소 정보가 없습니다:', placeName);
+          }
+
           resolve({
             name: place.place_name,
-            address: place.address_name || place.road_address_name,
+            address: address,
             latitude: parseFloat(place.y),
             longitude: parseFloat(place.x),
           });
