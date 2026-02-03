@@ -69,7 +69,8 @@ export const ManualPlaceEntry = ({ onAdd }: ManualPlaceEntryProps) => {
     } else {
       // 선택한 결과를 카드로 추가
       setSearchResults((prev) => [...prev, option]);
-      // 옵션 목록에서 제거하지 않음 (다시 선택 가능)
+      // 선택 후 옵션 목록 숨기기
+      setSearchOptions([]);
     }
   };
 
