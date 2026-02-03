@@ -4,6 +4,13 @@
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.place-card.saved {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border-color: #86efac;
+  opacity: 0.85;
 }
 
 .place-header {
@@ -23,6 +30,13 @@
   line-height: 1.4;
 }
 
+.header-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+
 .confidence-badge {
   display: inline-block;
   padding: 6px 10px;
@@ -32,6 +46,29 @@
   font-weight: 700;
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+.saved-badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background-color: #10b981;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* 데스크톱 */
@@ -257,10 +294,21 @@
   font-weight: 700;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
+  transition: all 0.3s ease;
 }
 
 .btn-save:active {
   transform: scale(0.98);
+}
+
+.btn-save.saved {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+  cursor: not-allowed;
+}
+
+.btn-save.saved:active {
+  transform: none;
 }
 
 /* 데스크톱 */
@@ -313,6 +361,17 @@
   .btn-save:hover {
     transform: scale(1.02);
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+
+  .btn-save.saved:hover {
+    transform: none;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+  }
+
+  .place-card.saved:hover {
+    transform: none;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border-color: #86efac;
   }
 }
 

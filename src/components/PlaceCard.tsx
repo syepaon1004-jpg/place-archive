@@ -12,6 +12,7 @@ export const PlaceCard = ({ place, onSave }: PlaceCardProps) => {
   const [selectedCategory, setSelectedCategory] = useState(place.suggestedCategory);
   const [showUrls, setShowUrls] = useState(false);
   const [location, setLocation] = useState(place.suggestedLocation || '');
+  const [isSaved, setIsSaved] = useState(false);
 
   const categories = [
     { name: '카페', icon: '☕' },
@@ -25,13 +26,14 @@ export const PlaceCard = ({ place, onSave }: PlaceCardProps) => {
     { name: '기타', icon: '📍' },
   ];
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!selectedCategory) {
       alert('⚠️ 카테고리를 선택해주세요!');
       return;
     }
     if (onSave) {
-      onSave(place, selectedCategory, location);
+      await onSave(place, selectedCategory, location);
+      setIsSaved(true);
     }
   };
 
@@ -48,16 +50,23 @@ export const PlaceCard = ({ place, onSave }: PlaceCardProps) => {
     '#ef4444';
 
   return (
-    <div className="place-card">
+    <div className={`place-card ${isSaved ? 'saved' : ''}`}>
       <div className="place-header">
         <h3>{place.name}</h3>
-        <span 
-          className="confidence-badge" 
-          style={{ backgroundColor: confidenceColor }}
-          title="AI 확신도"
-        >
-          {Math.round(place.confidence * 100)}%
-        </span>
+        <div className="header-badges">
+          <span
+            className="confidence-badge"
+            style={{ backgroundColor: confidenceColor }}
+            title="AI 확신도"
+          >
+            {Math.round(place.confidence * 100)}%
+          </span>
+          {isSaved && (
+            <span className="saved-badge">
+              ✓ 저장됨
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="category-section">
@@ -141,10 +150,11 @@ export const PlaceCard = ({ place, onSave }: PlaceCardProps) => {
       </div>
 
       <button
-        className="btn-save"
+        className={`btn-save ${isSaved ? 'saved' : ''}`}
         onClick={handleSave}
+        disabled={isSaved}
       >
-        💾 저장하기
+        {isSaved ? '✓ 저장 완료' : '💾 저장하기'}
       </button>
     </div>
   );
