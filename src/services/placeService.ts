@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import type { ExtractedPlace } from '../types/database.types';
+import { searchPlace } from './kakaoMapService';
 
 /**
  * 장소 저장
@@ -12,17 +13,37 @@ export async function savePlace(
 ): Promise<void> {
   try {
     // 1. 카테고리 ID 가져오기
-    const { data: category } = await supabase
+    const { data: category, error: categoryError } = await supabase
       .from('categories')
       .select('id')
       .eq('name', categoryName)
-      .single();
+      .maybeSingle();
 
-    if (!category) {
-      throw new Error('카테고리를 찾을 수 없습니다.');
+    if (categoryError) {
+      console.error('카테고리 조회 에러:', categoryError);
+      throw new Error(`카테고리 조회 실패: ${categoryError.message}`);
     }
 
-    // 2. 장소가 이미 존재하는지 확인
+    if (!category) {
+      throw new Error(`카테고리를 찾을 수 없습니다: "${categoryName}". 데이터베이스에 카테고리가 생성되어 있는지 확인해주세요.`);
+    }
+
+    // 2. Kakao Maps API로 좌표 가져오기
+    const placeInfo = await searchPlace(extractedPlace.name);
+    let latitude: number | null = null;
+    let longitude: number | null = null;
+    let address: string | null = null;
+
+    if (placeInfo) {
+      latitude = placeInfo.latitude;
+      longitude = placeInfo.longitude;
+      address = placeInfo.address;
+      console.log(`📍 좌표 자동 추가: ${extractedPlace.name} (${latitude}, ${longitude})`);
+    } else {
+      console.warn(`⚠️ 좌표를 찾을 수 없습니다: ${extractedPlace.name}`);
+    }
+
+    // 3. 장소가 이미 존재하는지 확인
     let placeId: string;
     const { data: existingPlace } = await supabase
       .from('places')
@@ -32,14 +53,28 @@ export async function savePlace(
 
     if (existingPlace) {
       placeId = existingPlace.id;
+      // 기존 장소에 좌표가 없으면 업데이트
+      if (placeInfo) {
+        await supabase
+          .from('places')
+          .update({
+            latitude,
+            longitude,
+            address,
+          })
+          .eq('id', placeId);
+      }
     } else {
-      // 3. 새 장소 생성
+      // 4. 새 장소 생성 (좌표 포함)
       const { data: newPlace, error: placeError } = await supabase
         .from('places')
         .insert([
           {
             name: extractedPlace.name,
             category_id: category.id,
+            latitude,
+            longitude,
+            address,
           },
         ])
         .select()
@@ -103,6 +138,8 @@ export async function getUserPlaces(userId: string): Promise<any[]> {
           id,
           name,
           address,
+          latitude,
+          longitude,
           category:categories (
             id,
             name,

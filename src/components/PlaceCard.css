@@ -88,6 +88,30 @@
   font-size: 13px;
   font-weight: 600;
   color: #4a5568;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
 }
 
 .category-buttons {
@@ -201,6 +225,12 @@
   transform: scale(0.97);
 }
 
+.btn-map-view {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  grid-column: 1 / -1;
+}
+
 .btn-kakao {
   background-color: #fee500;
   color: #3c1e1e;
@@ -249,6 +279,15 @@
     padding: 12px 20px;
     flex: 1;
     min-width: 100px;
+  }
+
+  .btn-map-view {
+    grid-column: auto;
+  }
+
+  .btn-map-view:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
   }
 
   .btn-kakao:hover {

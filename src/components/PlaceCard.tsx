@@ -26,6 +26,10 @@ export const PlaceCard = ({ place, onSave }: PlaceCardProps) => {
   ];
 
   const handleSave = () => {
+    if (!selectedCategory) {
+      alert('⚠️ 카테고리를 선택해주세요!');
+      return;
+    }
     if (onSave) {
       onSave(place, selectedCategory, location);
     }
@@ -57,7 +61,12 @@ export const PlaceCard = ({ place, onSave }: PlaceCardProps) => {
       </div>
 
       <div className="category-section">
-        <p className="category-label">카테고리 선택:</p>
+        <p className="category-label">
+          카테고리 선택:
+          {place.suggestedCategory && selectedCategory === place.suggestedCategory && (
+            <span className="ai-badge"> ✨ AI 추천</span>
+          )}
+        </p>
         <div className="category-buttons">
           {categories.map((cat) => (
             <button
@@ -85,19 +94,19 @@ export const PlaceCard = ({ place, onSave }: PlaceCardProps) => {
       <div className="map-section">
         <p className="map-label">지도에서 찾기:</p>
         <div className="action-buttons">
-          <button 
+          <button
             className="btn-kakao"
             onClick={() => openKakaoMap(place.name)}
           >
             🗺️ 카카오맵
           </button>
-          <button 
+          <button
             className="btn-naver"
             onClick={() => openNaverMap(place.name)}
           >
             📍 네이버지도
           </button>
-          <button 
+          <button
             className="btn-url"
             onClick={() => setShowUrls(!showUrls)}
           >
@@ -131,7 +140,7 @@ export const PlaceCard = ({ place, onSave }: PlaceCardProps) => {
         )}
       </div>
 
-      <button 
+      <button
         className="btn-save"
         onClick={handleSave}
       >

@@ -3,9 +3,12 @@ import { Auth } from './components/Auth';
 import { ImageUpload } from './components/ImageUpload';
 import { PlaceCard } from './components/PlaceCard';
 import { SavedPlacesSidebar } from './components/SavedPlacesSidebar';
+import { SavedPlacesMapView } from './components/SavedPlacesMapView';
+import { ManualPlaceEntry } from './components/ManualPlaceEntry';
 import { extractPlacesFromImages } from './services/aiService';
 import { authenticate, saveUserSession, getUserSession, logout } from './services/authService';
 import { savePlace } from './services/placeService';
+import { ensureCategories } from './services/categoryService';
 import type { ExtractedPlace } from './types/database.types';
 import './App.css';
 
@@ -16,6 +19,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMapViewOpen, setIsMapViewOpen] = useState(false);
 
   // 세션 확인
   useEffect(() => {
@@ -23,6 +27,11 @@ function App() {
     if (sessionUserId) {
       setUserId(sessionUserId);
     }
+  }, []);
+
+  // 카테고리 초기화 (앱 시작 시)
+  useEffect(() => {
+    ensureCategories();
   }, []);
 
   const handleAuth = async (password: string) => {
@@ -79,11 +88,28 @@ function App() {
 
   const handleSavePlace = async (place: ExtractedPlace, category: string, location: string) => {
     if (!userId) return;
-    
+
     try {
       await savePlace(userId, place, category, location);
-      const locationText = location ? ` (${location})` : '';
-      alert(`✅ "${place.name}"을(를) ${category}${locationText}에 저장했습니다!`);
+      // 저장 성공 - 알림 제거
+    } catch (err: any) {
+      alert(`❌ 저장 실패: ${err.message}`);
+    }
+  };
+
+  const handleManualAdd = async (placeName: string, category: string, location: string) => {
+    if (!userId) return;
+
+    try {
+      const manualPlace: ExtractedPlace = {
+        name: placeName,
+        suggestedCategory: category,
+        suggestedLocation: location,
+        confidence: 1.0,
+        rawText: '수동 입력'
+      };
+      await savePlace(userId, manualPlace, category, location);
+      // 저장 성공 - 알림 제거
     } catch (err: any) {
       alert(`❌ 저장 실패: ${err.message}`);
     }
@@ -104,19 +130,31 @@ function App() {
           <h1>📍 Place Archive</h1>
           <p>인스타그램 장소 추천을 한 번에 저장하세요</p>
         </div>
+        <button className="map-view-btn" onClick={() => setIsMapViewOpen(true)}>
+          🗺️ 지도로 보기
+        </button>
         <button className="logout-btn" onClick={handleLogout}>
           로그아웃
         </button>
       </header>
 
-      <SavedPlacesSidebar 
+      <SavedPlacesSidebar
         userId={userId}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
       />
 
+      {isMapViewOpen && (
+        <SavedPlacesMapView
+          userId={userId}
+          onClose={() => setIsMapViewOpen(false)}
+        />
+      )}
+
       <main className="app-main">
         <ImageUpload onImagesSelected={handleImagesSelected} />
+
+        <ManualPlaceEntry onAdd={handleManualAdd} />
 
         {isProcessing && (
           <div className="processing">

@@ -53,6 +53,25 @@
   background-color: rgba(255, 255, 255, 0.3);
 }
 
+.map-view-btn {
+  padding: 8px 12px;
+  background-color: rgba(255, 255, 255, 0.95);
+  color: #667eea;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.map-view-btn:active {
+  background-color: rgba(255, 255, 255, 0.85);
+  transform: scale(0.97);
+}
+
 .logout-btn {
   padding: 8px 12px;
   background-color: rgba(255, 255, 255, 0.2);
@@ -99,6 +118,17 @@
 
   .menu-btn:hover {
     background-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .map-view-btn {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+
+  .map-view-btn:hover {
+    background-color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   }
 
   .logout-btn {

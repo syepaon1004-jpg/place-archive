@@ -25,27 +25,27 @@ export function getGoogleMapSearchUrl(placeName: string): string {
 }
 
 /**
- * 카카오맵 검색 페이지 열기
+ * 카카오맵 검색 페이지 열기 (같은 탭)
  */
 export function openKakaoMap(placeName: string) {
   const url = getKakaoMapSearchUrl(placeName);
-  window.open(url, '_blank');
+  window.location.href = url;
 }
 
 /**
- * 네이버 지도 검색 페이지 열기
+ * 네이버 지도 검색 페이지 열기 (같은 탭)
  */
 export function openNaverMap(placeName: string) {
   const url = getNaverMapSearchUrl(placeName);
-  window.open(url, '_blank');
+  window.location.href = url;
 }
 
 /**
- * 구글 맵 검색 페이지 열기
+ * 구글 맵 검색 페이지 열기 (같은 탭)
  */
 export function openGoogleMap(placeName: string) {
   const url = getGoogleMapSearchUrl(placeName);
-  window.open(url, '_blank');
+  window.location.href = url;
 }
 
 /**
