@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Auth } from './components/Auth';
 import { ImageUpload } from './components/ImageUpload';
 import { SavedPlacesSidebar } from './components/SavedPlacesSidebar';
@@ -64,7 +64,7 @@ function App() {
   const handleLogout = () => {
     logout();
     setUserId(null);
-    setExtractedPlaces([]);
+    setAiExtractedResults([]);
   };
 
   const handleImagesSelected = async (files: File[]) => {
@@ -125,21 +125,6 @@ function App() {
       setError(err.message || '장소 추출 중 오류가 발생했습니다.');
     } finally {
       setIsProcessing(false);
-    }
-  };
-
-  const handleSavePlace = async (place: ExtractedPlace, category: string, location: string) => {
-    if (!userId) return;
-
-    try {
-      await savePlace(userId, place, category, location);
-      // 저장 성공 - 알림 제거
-    } catch (err: any) {
-      if (err.message === '이미 저장된 장소입니다.') {
-        alert('⚠️ 이미 저장된 장소입니다.');
-      } else {
-        alert(`❌ 저장 실패: ${err.message}`);
-      }
     }
   };
 

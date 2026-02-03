@@ -163,7 +163,7 @@ export async function savePlace(
     if (existingPlace) {
       placeId = existingPlace.id;
       // 기존 장소에 좌표가 없으면 업데이트
-      if (placeInfo) {
+      if (latitude && longitude) {
         await supabase
           .from('places')
           .update({
