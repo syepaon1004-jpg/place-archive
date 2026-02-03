@@ -1,10 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { openKakaoMap, openNaverMap, getAllMapUrls } from '../services/mapService';
 import { searchPlaces } from '../services/kakaoMapService';
 import './ManualPlaceEntry.css';
 
 interface ManualPlaceEntryProps {
   onAdd: (placeName: string, category: string, location: string) => void;
+  aiExtractedResults?: Array<{
+    placeName: string;
+    searchOptions: Array<{
+      name: string;
+      address: string;
+      latitude: number;
+      longitude: number;
+    }>;
+    suggestedCategory: string;
+  }>;
 }
 
 interface SearchResult {
@@ -15,12 +25,35 @@ interface SearchResult {
   suggestedCategory?: string;
 }
 
-export const ManualPlaceEntry = ({ onAdd }: ManualPlaceEntryProps) => {
+export const ManualPlaceEntry = ({ onAdd, aiExtractedResults }: ManualPlaceEntryProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOptions, setSearchOptions] = useState<SearchResult[]>([]); // 선택 가능한 옵션
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]); // 선택된 결과
   const [isSearching, setIsSearching] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // AI 추출 결과를 검색 옵션에 표시
+  useEffect(() => {
+    if (aiExtractedResults && aiExtractedResults.length > 0) {
+      console.log(`🤖 AI 추출 결과 ${aiExtractedResults.length}개 검색 옵션에 추가`);
+
+      const allOptions: SearchResult[] = [];
+
+      for (const extracted of aiExtractedResults) {
+        // 모든 검색 옵션을 표시 (사용자가 선택하도록)
+        for (const option of extracted.searchOptions) {
+          allOptions.push({
+            ...option,
+            suggestedCategory: extracted.suggestedCategory,
+          });
+        }
+      }
+
+      // searchOptions에 추가 (사용자가 선택할 수 있도록)
+      setSearchOptions(allOptions);
+      setIsExpanded(true); // 자동으로 확장
+    }
+  }, [aiExtractedResults]);
 
   const categories = [
     { name: '카페', icon: '☕' },

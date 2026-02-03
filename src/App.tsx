@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Auth } from './components/Auth';
 import { ImageUpload } from './components/ImageUpload';
-import { PlaceCard } from './components/PlaceCard';
 import { SavedPlacesSidebar } from './components/SavedPlacesSidebar';
 import { SavedPlacesMapView } from './components/SavedPlacesMapView';
 import { ManualPlaceEntry } from './components/ManualPlaceEntry';
 import { FeedbackModal } from './components/FeedbackModal';
 import { extractPlacesFromImages } from './services/aiService';
+import { searchPlaces } from './services/kakaoMapService';
 import { authenticate, saveUserSession, getUserSession, logout } from './services/authService';
 import { savePlace } from './services/placeService';
 import { ensureCategories } from './services/categoryService';
@@ -16,12 +16,21 @@ import './App.css';
 function App() {
   const [userId, setUserId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [extractedPlaces, setExtractedPlaces] = useState<ExtractedPlace[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMapViewOpen, setIsMapViewOpen] = useState(false);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [aiExtractedResults, setAiExtractedResults] = useState<Array<{
+    placeName: string;
+    searchOptions: Array<{
+      name: string;
+      address: string;
+      latitude: number;
+      longitude: number;
+    }>;
+    suggestedCategory: string;
+  }>>([]);
 
   // 세션 확인
   useEffect(() => {
@@ -62,23 +71,54 @@ function App() {
     console.log('선택된 이미지:', files);
     setIsProcessing(true);
     setError(null);
-    setExtractedPlaces([]);
+    setAiExtractedResults([]);
     setProgress({ current: 0, total: files.length });
 
     try {
-      // AI OCR API 호출하여 장소명 추출 (진행상황 실시간 업데이트)
+      // AI OCR API 호출하여 장소명 추출
       const places = await extractPlacesFromImages(
         files,
-        (current, total, currentPlaces) => {
+        (current, total) => {
           setProgress({ current, total });
-          setExtractedPlaces([...currentPlaces]); // 점진적으로 결과 표시
         }
       );
-      
-      setExtractedPlaces(places);
-      
+
       if (places.length === 0) {
         setError('이미지에서 장소를 찾을 수 없습니다. 다른 이미지를 시도해보세요.');
+        return;
+      }
+
+      // 각 추출된 장소명으로 카카오맵 검색
+      console.log(`📍 ${places.length}개 장소 검색 시작...`);
+      const searchResults = [];
+
+      for (let i = 0; i < places.length; i++) {
+        const place = places[i];
+        console.log(`🔍 검색 중 (${i + 1}/${places.length}): ${place.name}`);
+
+        try {
+          const options = await searchPlaces(place.name);
+
+          if (options.length > 0) {
+            searchResults.push({
+              placeName: place.name,
+              searchOptions: options,
+              suggestedCategory: place.suggestedCategory || '기타',
+            });
+            console.log(`✓ ${place.name}: ${options.length}개 결과 발견`);
+          } else {
+            console.warn(`⚠️ ${place.name}: 검색 결과 없음`);
+          }
+        } catch (err) {
+          console.error(`❌ ${place.name} 검색 실패:`, err);
+        }
+      }
+
+      setAiExtractedResults(searchResults);
+      console.log(`✅ 검색 완료: ${searchResults.length}개 장소`);
+
+      if (searchResults.length === 0) {
+        setError('검색 결과를 찾을 수 없습니다. 장소명을 확인하거나 직접 추가해주세요.');
       }
     } catch (err: any) {
       console.error('장소 추출 에러:', err);
@@ -173,17 +213,20 @@ function App() {
       <main className="app-main">
         <ImageUpload onImagesSelected={handleImagesSelected} />
 
-        <ManualPlaceEntry onAdd={handleManualAdd} />
+        <ManualPlaceEntry
+          onAdd={handleManualAdd}
+          aiExtractedResults={aiExtractedResults}
+        />
 
         {isProcessing && (
           <div className="processing">
             <div className="spinner"></div>
-            <p>AI가 장소 정보를 분석 중입니다...</p>
+            <p>AI가 장소 정보를 분석하고 검색 중입니다...</p>
             {progress.total > 0 && (
               <div className="progress-section">
                 <div className="progress-bar">
-                  <div 
-                    className="progress-fill" 
+                  <div
+                    className="progress-fill"
                     style={{ width: `${(progress.current / progress.total) * 100}%` }}
                   ></div>
                 </div>
@@ -198,21 +241,6 @@ function App() {
         {error && (
           <div className="error-message">
             <p>⚠️ {error}</p>
-          </div>
-        )}
-
-        {extractedPlaces.length > 0 && (
-          <div className="results">
-            <h2>🎉 추출된 장소들 ({extractedPlaces.length}개)</h2>
-            <div className="places-list">
-              {extractedPlaces.map((place, index) => (
-                <PlaceCard 
-                  key={index} 
-                  place={place}
-                  onSave={handleSavePlace}
-                />
-              ))}
-            </div>
           </div>
         )}
       </main>
