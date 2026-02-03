@@ -42,4 +42,8 @@ export interface ExtractedPlace {
   suggestedLocation?: string;
   confidence: number;
   rawText?: string;
+  // 사용자가 선택한 정확한 위치 정보 (수동 검색 시)
+  selectedLatitude?: number;
+  selectedLongitude?: number;
+  selectedAddress?: string;
 }

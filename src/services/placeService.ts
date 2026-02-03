@@ -122,19 +122,28 @@ export async function savePlace(
       throw new Error(`카테고리를 찾을 수 없습니다: "${categoryName}". 데이터베이스에 카테고리가 생성되어 있는지 확인해주세요.`);
     }
 
-    // 2. Kakao Maps API로 좌표 가져오기
-    const placeInfo = await searchPlace(extractedPlace.name);
+    // 2. 좌표 가져오기 (사용자 선택 좌표 우선, 없으면 Kakao Maps API로 검색)
     let latitude: number | null = null;
     let longitude: number | null = null;
     let address: string | null = null;
 
-    if (placeInfo) {
-      latitude = placeInfo.latitude;
-      longitude = placeInfo.longitude;
-      address = placeInfo.address;
-      console.log(`📍 좌표 자동 추가: ${extractedPlace.name} (${latitude}, ${longitude})`);
+    // 사용자가 선택한 정확한 위치가 있으면 우선 사용
+    if (extractedPlace.selectedLatitude && extractedPlace.selectedLongitude) {
+      latitude = extractedPlace.selectedLatitude;
+      longitude = extractedPlace.selectedLongitude;
+      address = extractedPlace.selectedAddress || null;
+      console.log(`📍 사용자 선택 위치 사용: ${extractedPlace.name} (${latitude}, ${longitude})`);
     } else {
-      console.warn(`⚠️ 좌표를 찾을 수 없습니다: ${extractedPlace.name}`);
+      // 선택된 위치가 없으면 Kakao Maps API로 검색
+      const placeInfo = await searchPlace(extractedPlace.name);
+      if (placeInfo) {
+        latitude = placeInfo.latitude;
+        longitude = placeInfo.longitude;
+        address = placeInfo.address;
+        console.log(`📍 좌표 자동 검색: ${extractedPlace.name} (${latitude}, ${longitude})`);
+      } else {
+        console.warn(`⚠️ 좌표를 찾을 수 없습니다: ${extractedPlace.name}`);
+      }
     }
 
     // 3. 중복 체크 (위치 기반)

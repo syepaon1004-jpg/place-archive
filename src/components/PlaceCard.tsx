@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ExtractedPlace } from '../types/database.types';
 import { openKakaoMap, openNaverMap, getAllMapUrls } from '../services/mapService';
+import { searchPlaces } from '../services/kakaoMapService';
 import './PlaceCard.css';
 
 interface PlaceCardProps {
@@ -8,11 +9,21 @@ interface PlaceCardProps {
   onSave?: (place: ExtractedPlace, category: string, location: string) => void;
 }
 
+interface SearchOption {
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+}
+
 export const PlaceCard = ({ place, onSave }: PlaceCardProps) => {
   const [selectedCategory, setSelectedCategory] = useState(place.suggestedCategory);
   const [showUrls, setShowUrls] = useState(false);
   const [location, setLocation] = useState(place.suggestedLocation || '');
   const [isSaved, setIsSaved] = useState(false);
+  const [searchOptions, setSearchOptions] = useState<SearchOption[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedOption, setSelectedOption] = useState<SearchOption | null>(null);
 
   const categories = [
     { name: '카페', icon: '☕' },
@@ -26,15 +37,60 @@ export const PlaceCard = ({ place, onSave }: PlaceCardProps) => {
     { name: '기타', icon: '📍' },
   ];
 
+  const handleSearchLocation = async () => {
+    setIsSearching(true);
+    try {
+      const results = await searchPlaces(place.name);
+      if (results.length === 0) {
+        alert('⚠️ 검색 결과가 없습니다. 직접 저장하시겠습니까?');
+        setSearchOptions([]);
+      } else if (results.length === 1) {
+        // 결과가 1개면 바로 저장
+        setSelectedOption(results[0]);
+        if (onSave) {
+          await onSave(place, selectedCategory, location);
+          setIsSaved(true);
+        }
+      } else {
+        // 결과가 여러개면 선택 UI 표시
+        setSearchOptions(results);
+      }
+    } catch (error) {
+      console.error('검색 에러:', error);
+      alert('❌ 검색 중 오류가 발생했습니다.');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSelectOption = async (option: SearchOption) => {
+    setSelectedOption(option);
+    setSearchOptions([]); // 옵션 숨기기
+
+    // 선택한 위치로 저장
+    if (onSave) {
+      // ExtractedPlace에 선택된 좌표 정보 추가
+      const placeWithCoords: ExtractedPlace = {
+        ...place,
+        selectedLatitude: option.latitude,
+        selectedLongitude: option.longitude,
+        selectedAddress: option.address,
+        suggestedLocation: option.address,
+      };
+
+      await onSave(placeWithCoords, selectedCategory, location || option.address.split(' ')[0]);
+      setIsSaved(true);
+    }
+  };
+
   const handleSave = async () => {
     if (!selectedCategory) {
       alert('⚠️ 카테고리를 선택해주세요!');
       return;
     }
-    if (onSave) {
-      await onSave(place, selectedCategory, location);
-      setIsSaved(true);
-    }
+
+    // 위치 검색 시작
+    await handleSearchLocation();
   };
 
   const handleCopyUrl = (url: string, mapName: string) => {
@@ -88,6 +144,46 @@ export const PlaceCard = ({ place, onSave }: PlaceCardProps) => {
           ))}
         </div>
       </div>
+
+      {searchOptions.length > 0 && (
+        <div className="search-options">
+          <div className="options-header">
+            <span>📍 여러 지점이 있습니다. 선택해주세요 ({searchOptions.length}개)</span>
+            <button
+              className="btn-clear-options"
+              onClick={() => setSearchOptions([])}
+            >
+              취소
+            </button>
+          </div>
+          <div className="options-list">
+            {searchOptions.map((option, index) => (
+              <div key={index} className="option-item">
+                <div className="option-info">
+                  <h5>{option.name}</h5>
+                  <p>{option.address}</p>
+                </div>
+                <button
+                  className="btn-select-option"
+                  onClick={() => handleSelectOption(option)}
+                >
+                  선택
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {selectedOption && (
+        <div className="selected-location">
+          <p className="location-label">✓ 선택된 위치:</p>
+          <div className="selected-info">
+            <p><strong>{selectedOption.name}</strong></p>
+            <p>{selectedOption.address}</p>
+          </div>
+        </div>
+      )}
 
       <div className="location-section">
         <p className="location-label">위치 (선택):</p>
@@ -152,9 +248,9 @@ export const PlaceCard = ({ place, onSave }: PlaceCardProps) => {
       <button
         className={`btn-save ${isSaved ? 'saved' : ''}`}
         onClick={handleSave}
-        disabled={isSaved}
+        disabled={isSaved || isSearching}
       >
-        {isSaved ? '✓ 저장 완료' : '💾 저장하기'}
+        {isSearching ? '🔍 검색 중...' : isSaved ? '✓ 저장 완료' : '💾 저장하기'}
       </button>
     </div>
   );

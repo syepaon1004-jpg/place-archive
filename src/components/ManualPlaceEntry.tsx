@@ -119,7 +119,7 @@ export const ManualPlaceEntry = ({ onAdd }: ManualPlaceEntryProps) => {
       <div className="manual-entry-search">
         <input
           type="text"
-          placeholder="장소 이름을 입력하세요 (예: 성수동 카페)"
+          placeholder="장소 이름을 입력하세요(예:투썸 신촌역점)"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
