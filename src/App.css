@@ -89,6 +89,40 @@
   background-color: rgba(255, 255, 255, 0.3);
 }
 
+.feedback-btn {
+  padding: 8px 12px;
+  background-color: rgba(255, 255, 255, 0.95);
+  color: #667eea;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.feedback-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.feedback-btn:active {
+  background-color: rgba(255, 255, 255, 0.85);
+  transform: scale(0.97);
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    box-shadow: 0 2px 12px rgba(102, 126, 234, 0.4), 0 0 20px rgba(102, 126, 234, 0.3);
+  }
+}
+
 .app-main {
   flex: 1;
   padding: 16px;

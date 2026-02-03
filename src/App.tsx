@@ -5,6 +5,7 @@ import { PlaceCard } from './components/PlaceCard';
 import { SavedPlacesSidebar } from './components/SavedPlacesSidebar';
 import { SavedPlacesMapView } from './components/SavedPlacesMapView';
 import { ManualPlaceEntry } from './components/ManualPlaceEntry';
+import { FeedbackModal } from './components/FeedbackModal';
 import { extractPlacesFromImages } from './services/aiService';
 import { authenticate, saveUserSession, getUserSession, logout } from './services/authService';
 import { savePlace } from './services/placeService';
@@ -20,6 +21,7 @@ function App() {
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMapViewOpen, setIsMapViewOpen] = useState(false);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
 
   // 세션 확인
   useEffect(() => {
@@ -138,6 +140,9 @@ function App() {
           <h1>📍 Place Archive</h1>
           <p>인스타그램 장소 추천을 한 번에 저장하세요</p>
         </div>
+        <button className="feedback-btn" onClick={() => setIsFeedbackModalOpen(true)}>
+          💬 피드백
+        </button>
         <button className="map-view-btn" onClick={() => setIsMapViewOpen(true)}>
           🗺️ 지도로 보기
         </button>
@@ -158,6 +163,12 @@ function App() {
           onClose={() => setIsMapViewOpen(false)}
         />
       )}
+
+      <FeedbackModal
+        userId={userId}
+        isOpen={isFeedbackModalOpen}
+        onClose={() => setIsFeedbackModalOpen(false)}
+      />
 
       <main className="app-main">
         <ImageUpload onImagesSelected={handleImagesSelected} />
