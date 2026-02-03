@@ -141,10 +141,10 @@ function App() {
           <p>인스타그램 장소 추천을 한 번에 저장하세요</p>
         </div>
         <button className="feedback-btn" onClick={() => setIsFeedbackModalOpen(true)}>
-          💬 피드백
+          💬<span className="btn-text"> 피드백</span>
         </button>
         <button className="map-view-btn" onClick={() => setIsMapViewOpen(true)}>
-          🗺️ 지도로 보기
+          🗺️<span className="btn-text"> 지도로 보기</span>
         </button>
         <button className="logout-btn" onClick={handleLogout}>
           로그아웃

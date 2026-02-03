@@ -7,46 +7,49 @@
 .app-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 16px;
+  padding: 12px 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   position: sticky;
   top: 0;
   z-index: 100;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
 }
 
 .header-content {
   flex: 1;
   text-align: center;
+  min-width: 0;
 }
 
 .app-header h1 {
-  margin: 0 0 4px 0;
-  font-size: 22px;
+  margin: 0;
+  font-size: 16px;
   font-weight: 700;
 }
 
 .app-header p {
   margin: 0;
-  font-size: 12px;
+  font-size: 10px;
   opacity: 0.95;
+  display: none; /* 모바일에서 숨김 */
 }
 
 .menu-btn {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 8px;
   background-color: rgba(255, 255, 255, 0.2);
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.3);
-  font-size: 24px;
+  font-size: 20px;
   cursor: pointer;
   transition: background-color 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .menu-btn:active {
@@ -54,17 +57,19 @@
 }
 
 .map-view-btn {
-  padding: 8px 12px;
+  padding: 8px 10px;
   background-color: rgba(255, 255, 255, 0.95);
   color: #667eea;
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 18px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+  line-height: 1;
 }
 
 .map-view-btn:active {
@@ -72,17 +77,23 @@
   transform: scale(0.97);
 }
 
+/* 모바일에서 텍스트 숨기기 */
+.map-view-btn .btn-text {
+  display: none;
+}
+
 .logout-btn {
-  padding: 8px 12px;
+  padding: 8px 10px;
   background-color: rgba(255, 255, 255, 0.2);
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.2s;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .logout-btn:active {
@@ -90,18 +101,20 @@
 }
 
 .feedback-btn {
-  padding: 8px 12px;
+  padding: 8px 10px;
   background-color: rgba(255, 255, 255, 0.95);
   color: #667eea;
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 18px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   animation: pulse-glow 2s ease-in-out infinite;
+  flex-shrink: 0;
+  line-height: 1;
 }
 
 .feedback-btn:hover {
@@ -112,6 +125,11 @@
 .feedback-btn:active {
   background-color: rgba(255, 255, 255, 0.85);
   transform: scale(0.97);
+}
+
+/* 모바일에서 텍스트 숨기기 */
+.feedback-btn .btn-text {
+  display: none;
 }
 
 @keyframes pulse-glow {
@@ -163,6 +181,12 @@
     background-color: white;
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  /* 데스크톱에서 버튼 텍스트 표시 */
+  .feedback-btn .btn-text,
+  .map-view-btn .btn-text {
+    display: inline;
   }
 
   .logout-btn {
