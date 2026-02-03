@@ -44,23 +44,32 @@ export const ManualPlaceEntry = ({ onAdd }: ManualPlaceEntryProps) => {
       const result = await searchPlace(searchQuery);
 
       if (result) {
-        // 주소 우선순위: 도로명주소 > 지번주소
-        const searchResult: SearchResult = {
-          name: result.name,
-          address: result.address,
-          latitude: result.latitude,
-          longitude: result.longitude,
-        };
+        // 중복 검색 방지
+        const isDuplicate = searchResults.some(
+          (r) => r.name === result.name && r.address === result.address
+        );
 
-        setSearchResults([searchResult]);
+        if (isDuplicate) {
+          alert('⚠️ 이미 추가된 장소입니다.');
+        } else {
+          // 주소 우선순위: 도로명주소 > 지번주소
+          const searchResult: SearchResult = {
+            name: result.name,
+            address: result.address,
+            latitude: result.latitude,
+            longitude: result.longitude,
+          };
+
+          // 기존 결과에 추가 (누적)
+          setSearchResults((prev) => [...prev, searchResult]);
+          setSearchQuery(''); // 검색창 초기화
+        }
       } else {
         alert('❌ 장소를 찾을 수 없습니다. 다른 검색어를 시도해보세요.');
-        setSearchResults([]);
       }
     } catch (error) {
       console.error('검색 에러:', error);
       alert('❌ 검색 중 오류가 발생했습니다.');
-      setSearchResults([]);
     } finally {
       setIsSearching(false);
     }
@@ -69,6 +78,10 @@ export const ManualPlaceEntry = ({ onAdd }: ManualPlaceEntryProps) => {
   const handleReset = () => {
     setSearchQuery('');
     setSearchResults([]);
+  };
+
+  const handleRemoveResult = (index: number) => {
+    setSearchResults((prev) => prev.filter((_, i) => i !== index));
   };
 
   if (!isExpanded) {
@@ -122,7 +135,7 @@ export const ManualPlaceEntry = ({ onAdd }: ManualPlaceEntryProps) => {
           <div className="results-header">
             <span>검색 결과 {searchResults.length}개</span>
             <button className="btn-reset" onClick={handleReset}>
-              새로 검색
+              모두 지우기
             </button>
           </div>
           {searchResults.map((result, index) => (
@@ -131,6 +144,7 @@ export const ManualPlaceEntry = ({ onAdd }: ManualPlaceEntryProps) => {
               result={result}
               categories={categories}
               onSave={onAdd}
+              onRemove={() => handleRemoveResult(index)}
             />
           ))}
         </div>
@@ -143,9 +157,10 @@ interface SearchResultCardProps {
   result: SearchResult;
   categories: Array<{ name: string; icon: string }>;
   onSave: (placeName: string, category: string, location: string) => void;
+  onRemove: () => void;
 }
 
-const SearchResultCard = ({ result, categories, onSave }: SearchResultCardProps) => {
+const SearchResultCard = ({ result, categories, onSave, onRemove }: SearchResultCardProps) => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [location, setLocation] = useState('');
   const [showUrls, setShowUrls] = useState(false);
@@ -175,11 +190,22 @@ const SearchResultCard = ({ result, categories, onSave }: SearchResultCardProps)
           <h4>{result.name}</h4>
           <p className="result-address">📍 {result.address}</p>
         </div>
-        {isSaved && (
-          <span className="saved-badge">
-            ✓ 저장됨
-          </span>
-        )}
+        <div className="result-header-actions">
+          {isSaved && (
+            <span className="saved-badge">
+              ✓ 저장됨
+            </span>
+          )}
+          {!isSaved && (
+            <button
+              className="btn-remove-result"
+              onClick={onRemove}
+              title="이 검색 결과 제거"
+            >
+              ✕
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="category-section">

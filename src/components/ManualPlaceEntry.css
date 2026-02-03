@@ -369,6 +369,29 @@
   font-weight: 500;
 }
 
+.result-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-remove-result {
+  background: transparent;
+  border: none;
+  color: #a0aec0;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  line-height: 1;
+}
+
+.btn-remove-result:hover {
+  background: #fee;
+  color: #e53e3e;
+}
+
 .saved-badge {
   display: inline-block;
   padding: 6px 10px;
