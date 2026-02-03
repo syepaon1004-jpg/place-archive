@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { openKakaoMap, openNaverMap, getAllMapUrls } from '../services/mapService';
-import { searchPlace } from '../services/kakaoMapService';
+import { searchPlaces } from '../services/kakaoMapService';
 import './ManualPlaceEntry.css';
 
 interface ManualPlaceEntryProps {
@@ -17,7 +17,8 @@ interface SearchResult {
 
 export const ManualPlaceEntry = ({ onAdd }: ManualPlaceEntryProps) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searchOptions, setSearchOptions] = useState<SearchResult[]>([]); // 선택 가능한 옵션
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]); // 선택된 결과
   const [isSearching, setIsSearching] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -41,29 +42,11 @@ export const ManualPlaceEntry = ({ onAdd }: ManualPlaceEntryProps) => {
 
     setIsSearching(true);
     try {
-      const result = await searchPlace(searchQuery);
+      const results = await searchPlaces(searchQuery);
 
-      if (result) {
-        // 중복 검색 방지
-        const isDuplicate = searchResults.some(
-          (r) => r.name === result.name && r.address === result.address
-        );
-
-        if (isDuplicate) {
-          alert('⚠️ 이미 추가된 장소입니다.');
-        } else {
-          // 주소 우선순위: 도로명주소 > 지번주소
-          const searchResult: SearchResult = {
-            name: result.name,
-            address: result.address,
-            latitude: result.latitude,
-            longitude: result.longitude,
-          };
-
-          // 기존 결과에 추가 (누적)
-          setSearchResults((prev) => [...prev, searchResult]);
-          setSearchQuery(''); // 검색창 초기화
-        }
+      if (results.length > 0) {
+        setSearchOptions(results);
+        setSearchQuery(''); // 검색창 초기화
       } else {
         alert('❌ 장소를 찾을 수 없습니다. 다른 검색어를 시도해보세요.');
       }
@@ -75,13 +58,33 @@ export const ManualPlaceEntry = ({ onAdd }: ManualPlaceEntryProps) => {
     }
   };
 
+  const handleSelectOption = (option: SearchResult) => {
+    // 중복 검색 방지
+    const isDuplicate = searchResults.some(
+      (r) => r.name === option.name && r.address === option.address
+    );
+
+    if (isDuplicate) {
+      alert('⚠️ 이미 추가된 장소입니다.');
+    } else {
+      // 선택한 결과를 카드로 추가
+      setSearchResults((prev) => [...prev, option]);
+      // 옵션 목록에서 제거하지 않음 (다시 선택 가능)
+    }
+  };
+
   const handleReset = () => {
     setSearchQuery('');
+    setSearchOptions([]);
     setSearchResults([]);
   };
 
   const handleRemoveResult = (index: number) => {
     setSearchResults((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleClearOptions = () => {
+    setSearchOptions([]);
   };
 
   if (!isExpanded) {
@@ -129,6 +132,33 @@ export const ManualPlaceEntry = ({ onAdd }: ManualPlaceEntryProps) => {
           {isSearching ? '🔍 검색 중...' : '🔍 검색'}
         </button>
       </div>
+
+      {searchOptions.length > 0 && (
+        <div className="search-options">
+          <div className="options-header">
+            <span>검색된 장소 {searchOptions.length}개 - 원하는 장소를 선택하세요</span>
+            <button className="btn-clear-options" onClick={handleClearOptions}>
+              목록 닫기
+            </button>
+          </div>
+          <div className="options-list">
+            {searchOptions.map((option, index) => (
+              <div key={index} className="option-item">
+                <div className="option-info">
+                  <h5>{option.name}</h5>
+                  <p>📍 {option.address}</p>
+                </div>
+                <button
+                  className="btn-select-option"
+                  onClick={() => handleSelectOption(option)}
+                >
+                  선택
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {searchResults.length > 0 && (
         <div className="search-results">

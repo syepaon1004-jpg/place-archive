@@ -134,6 +134,53 @@ export async function searchPlace(placeName: string): Promise<{
 }
 
 /**
+ * 여러 장소 검색 결과 가져오기
+ * 주소 우선순위: 도로명주소 > 지번주소
+ */
+export async function searchPlaces(placeName: string): Promise<Array<{
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+}>> {
+  try {
+    await loadKakaoMapScript();
+
+    return new Promise((resolve) => {
+      const ps = new window.kakao.maps.services.Places();
+
+      ps.keywordSearch(placeName, (data: any[], status: any) => {
+        if (status === window.kakao.maps.services.Status.OK && data.length > 0) {
+          // 모든 검색 결과 반환 (최대 15개)
+          const results = data.map((place) => {
+            const address = place.road_address_name || place.address_name || '';
+
+            if (!address) {
+              console.warn('주소 정보가 없습니다:', place.place_name);
+            }
+
+            return {
+              name: place.place_name,
+              address: address,
+              latitude: parseFloat(place.y),
+              longitude: parseFloat(place.x),
+            };
+          });
+
+          resolve(results);
+        } else {
+          console.warn('장소를 찾을 수 없습니다:', placeName);
+          resolve([]);
+        }
+      });
+    });
+  } catch (error) {
+    console.error('장소 검색 에러:', error);
+    return [];
+  }
+}
+
+/**
  * 지도 표시 (컨테이너에 지도를 렌더링)
  */
 export async function displayMap(
