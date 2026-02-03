@@ -3,6 +3,100 @@ import type { ExtractedPlace } from '../types/database.types';
 import { searchPlace } from './kakaoMapService';
 
 /**
+ * 이미 저장된 장소인지 확인 (위치 기반)
+ */
+async function isPlaceAlreadySaved(
+  userId: string,
+  placeName: string,
+  latitude: number | null,
+  longitude: number | null,
+  address: string | null
+): Promise<boolean> {
+  try {
+    // 좌표가 있는 경우: 좌표로 중복 체크 (0.001도 이내 = 약 100m 이내)
+    if (latitude !== null && longitude !== null) {
+      const { data, error } = await supabase
+        .from('user_places')
+        .select(`
+          place:places (
+            latitude,
+            longitude
+          )
+        `)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        for (const item of data) {
+          const place = (item as any).place;
+          if (place?.latitude && place?.longitude) {
+            const latDiff = Math.abs(place.latitude - latitude);
+            const lngDiff = Math.abs(place.longitude - longitude);
+            // 약 100m 이내면 같은 장소로 간주
+            if (latDiff < 0.001 && lngDiff < 0.001) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+
+    // 주소가 있는 경우: 이름 + 주소로 중복 체크
+    if (address) {
+      const { data, error } = await supabase
+        .from('user_places')
+        .select(`
+          place:places (
+            name,
+            address
+          )
+        `)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        for (const item of data) {
+          const place = (item as any).place;
+          if (place?.name === placeName && place?.address === address) {
+            return true;
+          }
+        }
+      }
+    }
+
+    // 좌표도 주소도 없는 경우: 이름으로만 체크
+    if (!latitude && !longitude && !address) {
+      const { data, error } = await supabase
+        .from('user_places')
+        .select(`
+          place:places (
+            name
+          )
+        `)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        for (const item of data) {
+          const place = (item as any).place;
+          if (place?.name === placeName) {
+            return true;
+          }
+        }
+      }
+    }
+
+    return false;
+  } catch (error) {
+    console.error('중복 체크 에러:', error);
+    return false; // 에러 발생 시 저장 허용
+  }
+}
+
+/**
  * 장소 저장
  */
 export async function savePlace(
@@ -43,7 +137,13 @@ export async function savePlace(
       console.warn(`⚠️ 좌표를 찾을 수 없습니다: ${extractedPlace.name}`);
     }
 
-    // 3. 장소가 이미 존재하는지 확인
+    // 3. 중복 체크 (위치 기반)
+    const isDuplicate = await isPlaceAlreadySaved(userId, extractedPlace.name, latitude, longitude, address);
+    if (isDuplicate) {
+      throw new Error('이미 저장된 장소입니다.');
+    }
+
+    // 4. 장소가 이미 존재하는지 확인
     let placeId: string;
     const { data: existingPlace } = await supabase
       .from('places')
@@ -65,7 +165,7 @@ export async function savePlace(
           .eq('id', placeId);
       }
     } else {
-      // 4. 새 장소 생성 (좌표 포함)
+      // 5. 새 장소 생성 (좌표 포함)
       const { data: newPlace, error: placeError } = await supabase
         .from('places')
         .insert([
@@ -84,7 +184,7 @@ export async function savePlace(
       placeId = newPlace.id;
     }
 
-    // 4. 사용자 장소에 추가 (이미 저장되어 있으면 무시)
+    // 6. 사용자 장소에 추가
     // location 컬럼 없이 저장
     const { error: userPlaceError } = await supabase
       .from('user_places')

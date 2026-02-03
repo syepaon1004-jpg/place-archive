@@ -93,7 +93,11 @@ function App() {
       await savePlace(userId, place, category, location);
       // 저장 성공 - 알림 제거
     } catch (err: any) {
-      alert(`❌ 저장 실패: ${err.message}`);
+      if (err.message === '이미 저장된 장소입니다.') {
+        alert('⚠️ 이미 저장된 장소입니다.');
+      } else {
+        alert(`❌ 저장 실패: ${err.message}`);
+      }
     }
   };
 
@@ -111,7 +115,11 @@ function App() {
       await savePlace(userId, manualPlace, category, location);
       // 저장 성공 - 알림 제거
     } catch (err: any) {
-      alert(`❌ 저장 실패: ${err.message}`);
+      if (err.message === '이미 저장된 장소입니다.') {
+        alert('⚠️ 이미 저장된 장소입니다.');
+      } else {
+        alert(`❌ 저장 실패: ${err.message}`);
+      }
     }
   };
 
