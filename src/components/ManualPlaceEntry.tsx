@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { openKakaoMap, openNaverMap, getAllMapUrls } from '../services/mapService';
 import { searchPlace } from '../services/kakaoMapService';
-import type { ExtractedPlace } from '../types/database.types';
 import './ManualPlaceEntry.css';
 
 interface ManualPlaceEntryProps {
