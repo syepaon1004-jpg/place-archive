@@ -293,6 +293,66 @@
   cursor: not-allowed;
 }
 
+/* AI 추출 장소별 그룹 섹션 */
+.pending-selections {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pending-header {
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+  border-radius: 10px;
+  border: 2px solid #667eea30;
+}
+
+.pending-header span {
+  font-size: 14px;
+  font-weight: 700;
+  color: #667eea;
+}
+
+.place-group {
+  background: #f7fafc;
+  border-radius: 12px;
+  padding: 16px;
+  border: 2px solid #e2e8f0;
+}
+
+.group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #cbd5e0;
+}
+
+.group-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+.btn-skip-group {
+  padding: 6px 12px;
+  background-color: #e2e8f0;
+  color: #718096;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-skip-group:hover {
+  background-color: #cbd5e0;
+  color: #4a5568;
+}
+
 /* 검색 옵션 섹션 */
 .search-options {
   margin-top: 20px;

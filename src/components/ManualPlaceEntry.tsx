@@ -25,32 +25,57 @@ interface SearchResult {
   suggestedCategory?: string;
 }
 
+// 장소별 검색 결과 그룹
+interface PlaceGroup {
+  placeName: string;
+  searchOptions: SearchResult[];
+  suggestedCategory: string;
+}
+
 export const ManualPlaceEntry = ({ onAdd, aiExtractedResults }: ManualPlaceEntryProps) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchOptions, setSearchOptions] = useState<SearchResult[]>([]); // 선택 가능한 옵션
+  const [searchOptions, setSearchOptions] = useState<SearchResult[]>([]); // 수동 검색 결과
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]); // 선택된 결과
   const [isSearching, setIsSearching] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [pendingSelections, setPendingSelections] = useState<PlaceGroup[]>([]); // AI 추출 장소별 그룹
 
-  // AI 추출 결과를 검색 옵션에 표시
+  // AI 추출 결과를 장소별로 그룹화하여 표시
   useEffect(() => {
     if (aiExtractedResults && aiExtractedResults.length > 0) {
-      console.log(`🤖 AI 추출 결과 ${aiExtractedResults.length}개 검색 옵션에 추가`);
+      console.log(`🤖 AI 추출 결과 ${aiExtractedResults.length}개 장소 처리`);
 
-      const allOptions: SearchResult[] = [];
+      const groups: PlaceGroup[] = [];
+      const autoSelected: SearchResult[] = [];
 
       for (const extracted of aiExtractedResults) {
-        // 모든 검색 옵션을 표시 (사용자가 선택하도록)
-        for (const option of extracted.searchOptions) {
-          allOptions.push({
-            ...option,
+        const options = extracted.searchOptions.map(option => ({
+          ...option,
+          suggestedCategory: extracted.suggestedCategory,
+        }));
+
+        if (options.length === 1) {
+          // 검색 결과가 1개면 자동 선택
+          console.log(`✓ ${extracted.placeName}: 검색 결과 1개, 자동 선택`);
+          autoSelected.push(options[0]);
+        } else if (options.length > 1) {
+          // 검색 결과가 여러 개면 사용자가 선택하도록
+          console.log(`📋 ${extracted.placeName}: 검색 결과 ${options.length}개, 선택 필요`);
+          groups.push({
+            placeName: extracted.placeName,
+            searchOptions: options,
             suggestedCategory: extracted.suggestedCategory,
           });
         }
       }
 
-      // searchOptions에 추가 (사용자가 선택할 수 있도록)
-      setSearchOptions(allOptions);
+      // 자동 선택된 결과 추가
+      if (autoSelected.length > 0) {
+        setSearchResults(prev => [...prev, ...autoSelected]);
+      }
+
+      // 선택이 필요한 그룹 설정
+      setPendingSelections(groups);
       setIsExpanded(true); // 자동으로 확장
     }
   }, [aiExtractedResults]);
@@ -107,10 +132,33 @@ export const ManualPlaceEntry = ({ onAdd, aiExtractedResults }: ManualPlaceEntry
     }
   };
 
+  // 장소별 그룹에서 옵션 선택
+  const handleSelectFromGroup = (groupIndex: number, option: SearchResult) => {
+    // 중복 검색 방지
+    const isDuplicate = searchResults.some(
+      (r) => r.name === option.name && r.address === option.address
+    );
+
+    if (isDuplicate) {
+      alert('⚠️ 이미 추가된 장소입니다.');
+    } else {
+      // 선택한 결과를 카드로 추가
+      setSearchResults((prev) => [...prev, option]);
+      // 해당 그룹 제거
+      setPendingSelections((prev) => prev.filter((_, i) => i !== groupIndex));
+    }
+  };
+
+  // 장소별 그룹 건너뛰기
+  const handleSkipGroup = (groupIndex: number) => {
+    setPendingSelections((prev) => prev.filter((_, i) => i !== groupIndex));
+  };
+
   const handleReset = () => {
     setSearchQuery('');
     setSearchOptions([]);
     setSearchResults([]);
+    setPendingSelections([]);
   };
 
   const handleRemoveResult = (index: number) => {
@@ -167,6 +215,45 @@ export const ManualPlaceEntry = ({ onAdd, aiExtractedResults }: ManualPlaceEntry
         </button>
       </div>
 
+      {/* AI 추출 장소별 그룹 - 각 장소별로 선택 */}
+      {pendingSelections.length > 0 && (
+        <div className="pending-selections">
+          <div className="pending-header">
+            <span>🤖 AI가 추출한 장소 {pendingSelections.length}개 - 각 장소별로 선택하세요</span>
+          </div>
+          {pendingSelections.map((group, groupIndex) => (
+            <div key={groupIndex} className="place-group">
+              <div className="group-header">
+                <span className="group-title">📍 "{group.placeName}" 검색 결과 ({group.searchOptions.length}개)</span>
+                <button
+                  className="btn-skip-group"
+                  onClick={() => handleSkipGroup(groupIndex)}
+                >
+                  건너뛰기
+                </button>
+              </div>
+              <div className="options-list">
+                {group.searchOptions.map((option, optionIndex) => (
+                  <div key={optionIndex} className="option-item">
+                    <div className="option-info">
+                      <h5>{option.name}</h5>
+                      <p>📍 {option.address}</p>
+                    </div>
+                    <button
+                      className="btn-select-option"
+                      onClick={() => handleSelectFromGroup(groupIndex, option)}
+                    >
+                      선택
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 수동 검색 결과 */}
       {searchOptions.length > 0 && (
         <div className="search-options">
           <div className="options-header">
